@@ -4,6 +4,26 @@
 
 > 本系统仅作为非处方药（OTC）的用药知识参考，不能替代执业医师或药师的专业诊断。病情严重或持续不缓解请及时就医。
 
+## 在线预览
+
+本项目是纯静态站点，推荐用 **GitHub Pages** 一键发布在线版：
+
+1. 打开仓库的 **Settings → Pages**
+2. **Source** 选择 `Deploy from a branch`
+3. **Branch** 选 `main`，目录选 `/ (root)`，点 **Save**
+4. 等待约 1 分钟，页面顶部会出现访问地址：
+
+   ```
+   https://moon-yang-cloud.github.io/ai-doctor/
+   ```
+
+   - 在线问诊：`https://moon-yang-cloud.github.io/ai-doctor/`
+   - 引擎测试页：`https://moon-yang-cloud.github.io/ai-doctor/tests/test.html`
+
+> 首次发布后，之后每次 `git push` 到 `main`，GitHub Pages 会自动更新线上内容。
+>
+> 因为启用了 Service Worker 离线缓存，更新后若看到旧页面，请按 `Ctrl + F5` 强制刷新。
+
 ## 核心特性
 
 - **问诊式对话**：分步追问（部位 → 主症状 → 伴随症状 → 病程 → 用药安全画像），不需要用户自己描述一长串。
@@ -20,6 +40,7 @@
 ├── index.html                  入口页面
 ├── manifest.json               PWA 配置
 ├── sw.js                       Service Worker（离线缓存）
+├── icon.svg                    应用图标
 ├── css/
 │   └── style.css               全局样式
 ├── js/
@@ -27,6 +48,7 @@
 │   ├── data/
 │   │   ├── symptoms.js         症状分类与问诊问题库
 │   │   ├── medicines.js        药物数据库
+│   │   ├── diagnoses.js        诊断知识库（"是什么病"的说明）
 │   │   └── interactions.js     禁忌 / 相互作用 / 红旗症状库
 │   ├── engine/
 │   │   ├── dialog.js           问诊对话状态机
@@ -35,6 +57,9 @@
 │   └── ui/
 │       ├── render.js           界面渲染
 │       └── components.js       可复用 UI 组件
+├── tests/
+│   └── test.html               推理引擎单元测试页
+├── LICENSE
 └── README.md
 ```
 
@@ -49,7 +74,10 @@
 
 ## 运行方式
 
-直接用浏览器打开 `index.html` 即可；或用任意静态服务器托管以启用 PWA 安装能力：
+**方式一：本地直接打开**
+直接用浏览器打开 `index.html` 即可使用（部分浏览器对 `file://` 下的 Service Worker 有限制，PWA 离线能力建议用方式二）。
+
+**方式二：本地静态服务器（推荐，可启用 PWA 安装）**
 
 ```bash
 # 任选其一
@@ -57,8 +85,25 @@ python -m http.server 8080
 npx serve .
 ```
 
+然后访问 `http://localhost:8080/`，引擎测试页在 `http://localhost:8080/tests/test.html`。
+
+**方式三：在线访问**
+见上方 [在线预览](#在线预览)。
+
+## 测试
+
+打开 `tests/test.html` 会自动运行推理引擎的单元测试（问诊流程、诊断结论、安全过滤、配伍检查、红旗预警等），页面顶部显示"通过 X / X"。
+
 ## 技术栈
 
 - 原生 HTML5 / CSS3 / JavaScript（ES6 模块化，零运行时依赖）
 - PWA（Web App Manifest + Service Worker）
 - 规则推理引擎（前端纯函数实现，可单元测试）
+
+## 许可证
+
+本项目基于 [MIT License](./LICENSE) 开源，可自由使用、修改与分发，但须保留版权与许可声明。
+
+## 免责声明
+
+本系统提供的所有用药信息仅供学习与参考，**不构成医疗建议**，不能替代专业医生或药师的诊断与处方。请在专业指导下用药，出现严重或持续症状请及时就医。
