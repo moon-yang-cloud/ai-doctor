@@ -1,0 +1,347 @@
+/* =========================================================================
+   智能用药问诊助手 - 全局样式
+   配色：清新医疗绿，传达专业、安心、洁净的观感
+   ========================================================================= */
+
+:root {
+  --teal: #3b7d6e;
+  --teal-dark: #2c6055;
+  --teal-light: #e6f2ef;
+  --bg: #f3f7f6;
+  --card: #ffffff;
+  --text: #25342f;
+  --muted: #7a8d87;
+  --line: #e1ebe8;
+  --radius: 16px;
+  --shadow: 0 6px 24px rgba(43, 96, 85, 0.08);
+
+  --danger: #d64545;
+  --danger-bg: #fdeceb;
+  --warn: #e08a1e;
+  --warn-bg: #fdf3e3;
+  --info: #2f7bb6;
+  --info-bg: #eaf3fa;
+
+  --primary-badge: #2e9e7e;
+  --secondary-badge: #6b9c92;
+  --caution-badge: #e08a1e;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ===== 头部 ===== */
+.app-header {
+  background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+  color: #fff;
+  padding: 26px 20px 22px;
+  text-align: center;
+  padding-top: calc(26px + env(safe-area-inset-top));
+}
+.app-header h1 { font-size: clamp(1.3em, 5vw, 1.7em); margin-bottom: 4px; }
+.app-header p { font-size: clamp(0.78em, 3vw, 0.92em); opacity: 0.92; }
+
+/* ===== 主体 ===== */
+.app-main {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 18px 16px 40px;
+}
+.app-stage { width: 100%; }
+
+/* ===== 进度条 ===== */
+.progress {
+  height: 8px;
+  background: var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--primary-badge));
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+.progress-text {
+  font-size: 0.74em;
+  color: var(--muted);
+  text-align: right;
+  margin-bottom: 16px;
+}
+
+/* ===== 问题卡片 ===== */
+.q-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 22px 18px;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.q-title { font-size: 1.12em; color: var(--text); margin-bottom: 6px; }
+.multi-hint { font-size: 0.78em; color: var(--muted); margin-bottom: 12px; }
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 0.98em;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.option:hover { border-color: var(--teal); background: var(--teal-light); }
+.option:active { transform: scale(0.99); }
+.option.selected {
+  border-color: var(--teal);
+  background: var(--teal-light);
+  box-shadow: inset 0 0 0 1px var(--teal);
+}
+.option.selected::after {
+  content: "✓";
+  position: absolute;
+}
+.opt-label { font-weight: 500; }
+.opt-desc { font-size: 0.78em; color: var(--muted); margin-top: 3px; }
+
+/* 多选项右侧勾选标记 */
+.option-multi { position: relative; padding-right: 42px; }
+.option-multi::before {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  transition: all 0.18s;
+}
+.option-multi.selected::before {
+  background: var(--teal);
+  border-color: var(--teal);
+  content: "✓";
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  line-height: 20px;
+}
+
+/* ===== 操作按钮 ===== */
+.q-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  justify-content: flex-end;
+}
+.btn-next, .btn-skip, .btn-restart {
+  border: none;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 0.95em;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.18s;
+}
+.btn-next { background: var(--teal); color: #fff; }
+.btn-next:hover { background: var(--teal-dark); }
+.btn-skip { background: #eef3f1; color: var(--muted); }
+.btn-skip:hover { background: #e1ebe8; }
+.shake { animation: shake 0.4s; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ===== 结果区 ===== */
+.result { animation: fadeUp 0.35s ease; }
+.result-title { font-size: 1.3em; color: var(--teal-dark); margin-bottom: 2px; }
+.result-sub { font-size: 0.84em; color: var(--muted); margin-bottom: 16px; }
+
+.redflag-zone { margin-bottom: 16px; }
+
+/* ===== 初步判断（诊断）卡片 ===== */
+.dx-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  border-top: 4px solid var(--teal);
+}
+.dx-card.dx-moderate { border-top-color: var(--warn); }
+.dx-card.dx-attention { border-top-color: var(--danger); }
+.dx-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.dx-tag {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: #fff;
+  background: var(--teal);
+  border-radius: 8px;
+  padding: 2px 9px;
+}
+.dx-card.dx-moderate .dx-tag { background: var(--warn); }
+.dx-card.dx-attention .dx-tag { background: var(--danger); }
+.dx-name { font-size: 1.12em; font-weight: 700; color: var(--text); }
+.dx-sev { font-size: 0.74em; color: var(--muted); }
+.dx-summary { font-size: 0.9em; color: #3a4a44; margin-bottom: 10px; line-height: 1.6; }
+.dx-block { font-size: 0.85em; color: #3a4a44; margin: 6px 0; line-height: 1.6; }
+.dx-block b { color: var(--teal-dark); }
+.dx-seedoctor { background: #fbf6ec; border-radius: 8px; padding: 8px 10px; }
+.dx-seedoctor b { color: var(--warn); }
+
+.meds-title { font-size: 1em; color: var(--teal-dark); margin: 4px 0 12px; }
+
+.alert {
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.88em;
+  margin-bottom: 10px;
+  line-height: 1.55;
+}
+.alert-danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #f3c7c5; font-weight: 600; }
+.alert-warn { background: var(--warn-bg); color: var(--warn); border: 1px solid #f5e0bb; }
+.alert-info { background: var(--info-bg); color: var(--info); border: 1px solid #c9e1f1; }
+
+/* ===== 药物卡片 ===== */
+.med-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--line);
+}
+.med-card.tier-primary { border-left-color: var(--primary-badge); }
+.med-card.tier-secondary { border-left-color: var(--secondary-badge); }
+.med-card.tier-caution { border-left-color: var(--caution-badge); }
+
+.med-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.tier-badge {
+  font-size: 0.72em;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 8px;
+  color: #fff;
+  white-space: nowrap;
+}
+.tier-badge.tier-primary { background: var(--primary-badge); }
+.tier-badge.tier-secondary { background: var(--secondary-badge); }
+.tier-badge.tier-caution { background: var(--caution-badge); }
+.med-name { font-size: 1.05em; font-weight: 700; color: var(--text); }
+.med-generic { font-size: 0.78em; color: var(--muted); margin-bottom: 10px; }
+
+.med-row { font-size: 0.88em; margin-bottom: 6px; color: #3a4a44; }
+.med-row b { color: var(--teal-dark); }
+.med-side { color: var(--muted); }
+
+.med-reasons {
+  margin-top: 8px;
+  background: var(--warn-bg);
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+.reason-line { font-size: 0.82em; color: var(--warn); margin: 3px 0; }
+
+.match-tags { margin-top: 8px; font-size: 0.78em; color: var(--muted); }
+.match-tag {
+  display: inline-block;
+  background: var(--teal-light);
+  color: var(--teal-dark);
+  border-radius: 6px;
+  padding: 1px 7px;
+  margin: 0 4px 4px 0;
+}
+
+.interaction-zone { margin: 18px 0; }
+.interaction-zone h3 { font-size: 0.98em; color: var(--teal-dark); margin-bottom: 10px; }
+
+.empty-result {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+}
+
+/* ===== 被排除列表 ===== */
+.blocked {
+  margin: 16px 0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+.blocked summary { cursor: pointer; font-size: 0.86em; color: var(--muted); }
+.blocked ul { margin: 10px 0 0 18px; font-size: 0.84em; color: #3a4a44; }
+.blocked li { margin: 5px 0; }
+
+/* ===== 免责声明 ===== */
+.disclaimer {
+  margin-top: 18px;
+  font-size: 0.78em;
+  color: var(--muted);
+  background: var(--teal-light);
+  border-radius: 12px;
+  padding: 12px 14px;
+  line-height: 1.6;
+}
+.disclaimer b { color: var(--danger); }
+
+.btn-restart {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  background: var(--teal);
+  color: #fff;
+}
+.btn-restart:hover { background: var(--teal-dark); }
+
+/* ===== 底部 ===== */
+.app-footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 0.74em;
+  color: var(--muted);
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 480px) {
+  .app-main { padding: 14px 12px 30px; }
+  .q-card { padding: 18px 14px; }
+  .option { padding: 13px 14px; font-size: 0.94em; }
+}

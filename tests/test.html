@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>引擎单元测试 · 智能用药助手</title>
+  <style>
+    body { font-family: -apple-system, "Microsoft YaHei", sans-serif; max-width: 760px; margin: 24px auto; padding: 0 16px; color: #25342f; }
+    h1 { color: #2c6055; }
+    .case { border-left: 4px solid #ccc; padding: 8px 14px; margin: 8px 0; border-radius: 6px; background: #fafafa; }
+    .pass { border-color: #2e9e7e; }
+    .fail { border-color: #d64545; background: #fdeceb; }
+    .tag { font-weight: 700; margin-right: 8px; }
+    .pass .tag { color: #2e9e7e; }
+    .fail .tag { color: #d64545; }
+    #summary { font-size: 1.1em; font-weight: 700; padding: 12px; border-radius: 8px; }
+    .detail { font-size: 0.85em; color: #555; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>推理引擎单元测试</h1>
+  <div id="summary"></div>
+  <div id="results"></div>
+
+  <!-- 被测模块 -->
+  <script src="../js/data/medicines.js"></script>
+  <script src="../js/data/symptoms.js"></script>
+  <script src="../js/data/diagnoses.js"></script>
+  <script src="../js/data/interactions.js"></script>
+  <script src="../js/engine/dialog.js"></script>
+  <script src="../js/engine/safety.js"></script>
+  <script src="../js/engine/recommend.js"></script>
+
+  <script>
+    const results = [];
+    function assert(name, cond, detail) {
+      results.push({ name, ok: !!cond, detail: detail || "" });
+    }
+
+    function buildEngines() {
+      const se = new SafetyEngine(ALLERGY_MAP, DRUG_INTERACTIONS, RED_FLAGS);
+      const re = new RecommendEngine(MEDICINES, se);
+      return { se, re };
+    }
+
+    // 走完一段问诊，返回 dialog
+    function runDialog(steps) {
+      const d = new DialogEngine(CATEGORIES);
+      steps.forEach((s) => d.answer(s));
+      return d;
+    }
+
+    // —— 用例 1：风热感冒应推荐蓝芩/银翘类 ——
+    (function () {
+      const d = runDialog([
+        ["respiratory"], ["cold"], ["yellow-nose"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      assert("风热感冒：问诊结束进入 result", d.phase === "result", "phase=" + d.phase);
+      assert("风热感冒：解析出 cold-wind-heat 标签",
+        d.resolvedTreats().includes("cold-wind-heat"), d.resolvedTreats().join(","));
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const primaryNames = r.tiers.primary.map((x) => x.med.id);
+      assert("风热感冒：首选包含蓝芩或银翘",
+        primaryNames.includes("lanqin") || primaryNames.includes("yinqiao"),
+        "primary=" + primaryNames.join(","));
+    })();
+
+    // —— 用例 2：青霉素过敏应屏蔽相关药（构造一个含 penicillin 标签的临时药验证机制）——
+    (function () {
+      const { se } = buildEngines();
+      const fakeMed = { id: "amox", name: "阿莫西林", generic: "", category: "", otc: true,
+        indications: ["sore-throat"], dosage: "", onset: "fast", toxicity: "low",
+        sideEffects: "", tags: ["penicillin"], contraAge: null, pregnancy: "safe", chronicWarn: {}, note: "" };
+      const res = se.analyze([fakeMed], { allergy: ["penicillin"] }, []);
+      assert("青霉素过敏：含 penicillin 标签药被 block",
+        res.blocked.length === 1 && res.blocked[0].med.id === "amox",
+        "blocked=" + res.blocked.length);
+    })();
+
+    // —— 用例 3：孕期禁用布洛芬 ——
+    (function () {
+      const { re } = buildEngines();
+      const r = re.recommend(["fever"], { pregnancy: ["pregnant"] }, []);
+      const allIds = [...r.tiers.primary, ...r.tiers.secondary, ...r.tiers.caution].map((x) => x.med.id);
+      const blockedIds = r.blocked.map((b) => b.med.id);
+      assert("孕期：布洛芬被排除", blockedIds.includes("ibuprofen") && !allIds.includes("ibuprofen"),
+        "blocked=" + blockedIds.join(","));
+      assert("孕期：对乙酰氨基酚仍可用", allIds.includes("acetaminophen"), "allowed=" + allIds.join(","));
+    })();
+
+    // —— 用例 4：对乙酰氨基酚 + 饮酒触发危险相互作用 ——
+    (function () {
+      const { re } = buildEngines();
+      const r = re.recommend(["fever"], { factors: ["alcohol"] }, []);
+      const hit = r.interactions.some((w) => w.id === "acetaminophen-alcohol" && w.level === "danger");
+      assert("退烧+饮酒：触发对乙酰氨基酚-酒精危险警告", hit,
+        "interactions=" + r.interactions.map((w) => w.id).join(","));
+    })();
+
+    // —— 用例 5：红旗症状（卒中样头痛）被收集并标记 danger ——
+    (function () {
+      const d = runDialog([
+        ["pain"], ["headache"], ["weakness"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const danger = r.redFlags.some((f) => f.key === "stroke-sign" && f.level === "danger");
+      assert("头痛+肢体无力：触发卒中红旗预警", danger,
+        "redFlags=" + r.redFlags.map((f) => f.key).join(","));
+    })();
+
+    // —— 用例 6：进度随作答递增 ——
+    (function () {
+      const d = new DialogEngine(CATEGORIES);
+      const p0 = d.progress();
+      d.answer(["respiratory"]);
+      const p1 = d.progress();
+      assert("进度随作答递增", p1 > p0, `p0=${p0.toFixed(2)} p1=${p1.toFixed(2)}`);
+    })();
+
+    // —— 用例 7：诊断结论 —— 风热感冒应解析出对应诊断标签与病名 ——
+    (function () {
+      const d = runDialog([
+        ["respiratory"], ["cold"], ["yellow-nose"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const dx = d.resolveDiagnosis();
+      assert("诊断：感冒选黄涕→风热感冒", dx === "cold-wind-heat", "dx=" + dx);
+      assert("诊断表含风热感冒说明", DIAGNOSES[dx] && /风热感冒/.test(DIAGNOSES[dx].name), DIAGNOSES[dx] && DIAGNOSES[dx].name);
+    })();
+
+    // —— 用例 8：腰背痛应推荐外用双氯芬酸/布洛芬，并诊断为腰肌劳损 ——
+    (function () {
+      const d = runDialog([
+        ["pain"], ["back-pain"], ["normal"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const ids = [...r.tiers.primary, ...r.tiers.secondary, ...r.tiers.caution].map((x) => x.med.id);
+      assert("腰背痛：推荐含外用扶他林或布洛芬",
+        ids.includes("diclofenacGel") || ids.includes("ibuprofen"), "meds=" + ids.join(","));
+      assert("腰背痛：诊断为腰肌劳损", d.resolveDiagnosis() === "back-pain", "dx=" + d.resolveDiagnosis());
+    })();
+
+    // —— 用例 9：牙龈肿痛应有候选药且能触发上火相关用药 ——
+    (function () {
+      const d = runDialog([
+        ["oral"], ["gingivitis"], ["no"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolveDiagnosis() ? d.resolvedTreats() : [], d.answers.safety, d.answers.redFlags);
+      assert("牙龈肿痛：有候选药", r.hasCandidates, "hasCandidates=" + r.hasCandidates);
+      assert("牙龈肿痛：诊断为牙龈炎", d.resolveDiagnosis() === "gingivitis", "dx=" + d.resolveDiagnosis());
+    })();
+
+    // —— 用例 10：腮腺炎触发传染病就医提醒 ——
+    (function () {
+      const d = runDialog([
+        ["oral"], ["mumps"], ["yes"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const hit = r.redFlags.some((f) => f.key === "mumps-care");
+      assert("腮腺炎：触发就医/传染病提醒", hit, "redFlags=" + r.redFlags.map((f) => f.key).join(","));
+    })();
+
+    // —— 用例 11：晕车应推荐茶苯海明，诊断为晕动症 ——
+    (function () {
+      const d = runDialog([
+        ["digestive"], ["nausea"], ["motion"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const ids = [...r.tiers.primary, ...r.tiers.secondary, ...r.tiers.caution].map((x) => x.med.id);
+      assert("晕车：推荐含茶苯海明", ids.includes("dimenhydrinate"), "meds=" + ids.join(","));
+      assert("晕车：诊断为晕动症", d.resolveDiagnosis() === "motion-sickness", "dx=" + d.resolveDiagnosis());
+    })();
+
+    // —— 用例 12：单病症类别自动跳过"更具体"步骤 ——
+    (function () {
+      const d = new DialogEngine(CATEGORIES);
+      d.answer(["sleep"]); // 睡眠类别只有"失眠"一个病症
+      assert("单病症类别：自动选中病症并进入追问",
+        d.phase === "followup" && d.selectedCondition && d.selectedCondition.id === "insomnia",
+        "phase=" + d.phase + " cond=" + (d.selectedCondition && d.selectedCondition.id));
+    })();
+
+    // —— 用例 13：眼部已拆分，干眼推荐人工泪液 ——
+    (function () {
+      const d = runDialog([
+        ["eye"], ["dry-eye"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const ids = [...r.tiers.primary, ...r.tiers.secondary, ...r.tiers.caution].map((x) => x.med.id);
+      assert("干眼：诊断为干眼症", d.resolveDiagnosis() === "dry-eye", "dx=" + d.resolveDiagnosis());
+      assert("干眼：推荐玻璃酸钠（人工泪液）", ids.includes("sodiumHyaluronateEye"), "meds=" + ids.join(","));
+    })();
+
+    // —— 用例 14：红眼伴视力下降触发严重眼病预警 ——
+    (function () {
+      const d = runDialog([
+        ["eye"], ["conjunctivitis"], ["yes"],
+        ["none"], ["none"], ["adult"], ["none"], ["none"],
+      ]);
+      const { re } = buildEngines();
+      const r = re.recommend(d.resolvedTreats(), d.answers.safety, d.answers.redFlags);
+      const danger = r.redFlags.some((f) => f.key === "eye-severe" && f.level === "danger");
+      assert("红眼+视力下降：触发严重眼病预警", danger,
+        "redFlags=" + r.redFlags.map((f) => f.key).join(","));
+    })();
+
+    // —— 渲染 ——
+    const passed = results.filter((r) => r.ok).length;
+    const total = results.length;
+    const sum = document.getElementById("summary");
+    sum.textContent = `通过 ${passed} / ${total}`;
+    sum.style.background = passed === total ? "#e6f7f1" : "#fdeceb";
+    sum.style.color = passed === total ? "#2c6055" : "#d64545";
+
+    const box = document.getElementById("results");
+    box.innerHTML = results
+      .map((r) => `<div class="case ${r.ok ? "pass" : "fail"}">
+        <span class="tag">${r.ok ? "PASS" : "FAIL"}</span>${r.name}
+        ${r.detail ? `<div class="detail">${r.detail}</div>` : ""}
+      </div>`)
+      .join("");
+  </script>
+</body>
+</html>

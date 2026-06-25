@@ -1,0 +1,17 @@
+# 操作系统 / 编辑器产生的文件
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+
+# 日志
+*.log
+
+# 编辑器配置
+.vscode/
+.idea/
+
+# Python 缓存（如本地有辅助脚本）
+__pycache__/
+*.pyc
