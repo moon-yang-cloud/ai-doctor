@@ -52,6 +52,107 @@ body {
 .app-header h1 { font-size: clamp(1.3em, 5vw, 1.7em); margin-bottom: 4px; }
 .app-header p { font-size: clamp(0.78em, 3vw, 0.92em); opacity: 0.92; }
 
+/* ===== 顶部导航 ===== */
+.top-nav {
+  display: flex;
+  gap: 6px;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 12px 16px 0;
+  flex-wrap: wrap;
+}
+.nav-tab-top {
+  flex: 1;
+  min-width: 72px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  color: var(--text);
+  border-radius: 10px;
+  padding: 9px 6px;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.nav-tab-top.active { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* ===== 二级页面通用 ===== */
+.page { animation: fadeUp 0.3s ease; }
+.page-title { font-size: 1.25em; color: var(--teal-dark); margin-bottom: 4px; }
+.page-sub { font-size: 0.84em; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+
+/* 药物百科 */
+.enc-search, .chk-section .enc-search {
+  width: 100%; font-size: 0.95em; padding: 11px 14px;
+  border: 1.5px solid var(--line); border-radius: 12px; outline: none; margin-bottom: 10px;
+}
+.enc-search:focus { border-color: var(--teal); }
+.enc-count { font-size: 0.78em; color: var(--muted); margin-bottom: 10px; }
+.enc-item {
+  background: var(--card); border-radius: 12px; box-shadow: var(--shadow);
+  margin-bottom: 10px; padding: 4px 0; overflow: hidden;
+}
+.enc-item summary {
+  cursor: pointer; padding: 12px 16px; display: flex; flex-direction: column; gap: 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+.enc-item summary::-webkit-details-marker { display: none; }
+.enc-name { font-weight: 700; color: var(--text); }
+.enc-cat { font-size: 0.76em; color: var(--muted); }
+.enc-body { padding: 4px 16px 14px; }
+.enc-row { font-size: 0.86em; margin: 6px 0; color: #3a4a44; line-height: 1.6; }
+.enc-row b { color: var(--teal-dark); }
+.enc-tag {
+  display: inline-block; background: var(--teal-light); color: var(--teal-dark);
+  border-radius: 6px; padding: 1px 8px; margin: 0 4px 4px 0; font-size: 0.92em;
+}
+.enc-warn { color: var(--warn); font-size: 0.95em; margin-top: 2px; }
+
+/* 用药自查 */
+.chk-section { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 14px; }
+.chk-label { font-weight: 700; color: var(--teal-dark); margin-bottom: 10px; }
+.chk-meds {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px;
+  max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.chk-med { font-size: 0.86em; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.chk-factors { display: flex; flex-direction: column; gap: 8px; }
+.chk-factors label { font-size: 0.9em; display: flex; align-items: center; gap: 8px; }
+.chk-run {
+  width: 100%; background: var(--teal); color: #fff; border: none; border-radius: 10px;
+  padding: 12px; font-size: 1em; font-weight: 600; cursor: pointer; margin-bottom: 14px;
+}
+.chk-run:hover { background: var(--teal-dark); }
+.chk-summary { font-size: 0.86em; color: var(--muted); margin-bottom: 10px; }
+
+/* 我的记录 */
+.rec-item { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 14px 16px; margin-bottom: 10px; border-left: 4px solid var(--teal); }
+.rec-head { display: flex; justify-content: space-between; align-items: center; }
+.rec-dx { font-weight: 700; color: var(--text); }
+.rec-del { background: none; border: none; color: var(--danger); font-size: 0.82em; cursor: pointer; }
+.rec-time { font-size: 0.74em; color: var(--muted); margin: 2px 0 8px; }
+.rec-row { font-size: 0.85em; color: #3a4a44; margin: 4px 0; line-height: 1.6; }
+.rec-row b { color: var(--teal-dark); }
+.rec-clear { width: 100%; background: #fff; color: var(--muted); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px; font-size: 0.9em; cursor: pointer; margin-top: 4px; }
+
+/* 结果页操作按钮 */
+.result-actions { display: flex; gap: 10px; margin-top: 14px; }
+.btn-save, .btn-copy {
+  flex: 1; border-radius: 10px; padding: 11px; font-size: 0.92em; font-weight: 600; cursor: pointer; border: 1.5px solid var(--teal);
+}
+.btn-save { background: var(--teal); color: #fff; }
+.btn-save:hover { background: var(--teal-dark); }
+.btn-copy { background: #fff; color: var(--teal-dark); }
+.btn-copy:hover { background: var(--teal-light); }
+
+/* toast */
+#toast {
+  position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(20px);
+  background: #25342f; color: #fff; padding: 11px 18px; border-radius: 10px; font-size: 0.85em;
+  opacity: 0; pointer-events: none; transition: all 0.25s; z-index: 999; box-shadow: 0 6px 24px rgba(0,0,0,0.2);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
 /* ===== 主体 ===== */
 .app-main {
   flex: 1;

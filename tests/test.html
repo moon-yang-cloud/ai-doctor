@@ -29,6 +29,7 @@
   <script src="../js/engine/dialog.js"></script>
   <script src="../js/engine/safety.js"></script>
   <script src="../js/engine/recommend.js"></script>
+  <script src="../js/engine/storage.js"></script>
 
   <script>
     const results = [];
@@ -215,6 +216,19 @@
       const danger = r.redFlags.some((f) => f.key === "eye-severe" && f.level === "danger");
       assert("红眼+视力下降：触发严重眼病预警", danger,
         "redFlags=" + r.redFlags.map((f) => f.key).join(","));
+    })();
+
+    // —— 用例 15：用药记录保存与删除 ——
+    (function () {
+      Store.clearRecords();
+      const id = Store.addRecord({ conditionName: "测试主诉", diagnosisName: "测试诊断", advice: "多休息", meds: ["药A", "药B"] });
+      let recs = Store.getRecords();
+      assert("保存后记录数为1且字段正确",
+        recs.length === 1 && recs[0].meds.length === 2 && recs[0].diagnosisName === "测试诊断",
+        "len=" + recs.length);
+      Store.removeRecord(id);
+      assert("删除后记录清空", Store.getRecords().length === 0);
+      Store.clearRecords();
     })();
 
     // —— 渲染 ——

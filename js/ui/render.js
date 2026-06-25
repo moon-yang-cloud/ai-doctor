@@ -140,12 +140,20 @@ class Renderer {
     html += C.blockedList(result.blocked);
 
     html += C.disclaimer();
+    html += `<div class="result-actions">
+      <button class="btn-save" data-action="save">保存到我的记录</button>
+      <button class="btn-copy" data-action="copy">复制方案</button>
+    </div>`;
     html += `<button class="btn-restart" data-action="restart">重新问诊</button>`;
     html += `</div>`;
 
     this.root.innerHTML = `${this.C.progressBar(1)}${html}`;
     const rb = this.root.querySelector('[data-action="restart"]');
     if (rb) rb.addEventListener("click", () => this._emit("restart"));
+    const sb = this.root.querySelector('[data-action="save"]');
+    if (sb) sb.addEventListener("click", () => this._emit("save"));
+    const cb = this.root.querySelector('[data-action="copy"]');
+    if (cb) cb.addEventListener("click", () => this._emit("copy"));
     this._scrollTop();
   }
 

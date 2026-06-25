@@ -2,7 +2,7 @@
  * Service Worker —— 提供离线访问能力
  * 采用"缓存优先，网络兜底"策略，首次访问后即可离线使用。
  */
-const CACHE_NAME = "medguide-v4";
+const CACHE_NAME = "medguide-v5";
 const ASSETS = [
   "./",
   "./index.html",
@@ -16,8 +16,12 @@ const ASSETS = [
   "./js/engine/dialog.js",
   "./js/engine/safety.js",
   "./js/engine/recommend.js",
+  "./js/engine/storage.js",
   "./js/ui/components.js",
   "./js/ui/render.js",
+  "./js/ui/encyclopedia.js",
+  "./js/ui/checker.js",
+  "./js/ui/records.js",
   "./js/app.js",
 ];
 
@@ -36,7 +40,15 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  // 网络优先：在线总是拿最新文件，离线再用缓存兜底
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    fetch(event.request)
+      .then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy)).catch(() => {});
+        return resp;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
